@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
@@ -48,6 +49,7 @@ def get_product(request, pk):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def new_product(request):
 
     data= request.data
@@ -56,7 +58,7 @@ def new_product(request):
 
     if serializer.is_valid():
 
-        product = Product.objects.create(**data)
+        product = Product.objects.create(**data, user=request.user)
 
         res = ProductSerializer(product, many=False)
 
@@ -85,10 +87,12 @@ def upload_product_images(request):
 
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def update_product(request, pk):
     product = get_object_or_404(Product, id=pk)
 
-    # Check if the user is same - todo
+    if product.user != request.user:
+        return Response({ 'error': 'You cannot update this product' }, status=status.HTTP_403_FORBIDDEN)
 
     product.name = request.data['name']
     product.description = request.data['description']
@@ -106,10 +110,12 @@ def update_product(request, pk):
 
 
 @api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_product(request, pk):
     product = get_object_or_404(Product, id=pk)
 
-    # Check if the user is same - todo
+    if product.user != request.user:
+        return Response({ 'error': 'You cannot delete this product' }, status=status.HTTP_403_FORBIDDEN)
 
     args = { "product": pk }
     images = ProductImages.objects.filter(**args)
