@@ -11,6 +11,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 from .serializers import SignUpSerializer, UserSerializer
+from utils.helpers import get_current_host
 
 # Create your views here.
 
@@ -72,10 +73,7 @@ def update_user(request):
 
     return Response(serializer.data)
 
-def get_current_host(request):
-    protocol = request.is_secure() and 'https' or 'http'
-    host = request.get_host()
-    return "{protocol}://{host}/".format(protocol=protocol, host=host)
+
 
 @api_view(['POST'])
 def forgot_password(request):
